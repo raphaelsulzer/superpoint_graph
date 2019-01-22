@@ -6,6 +6,7 @@ import numpy as np
 from sklearn.neighbors import NearestNeighbors
 from scipy.spatial import Delaunay
 from numpy import linalg as LA
+from numpy import matlib
 #------------------------------------------------------------------------------
 def compute_graph_nn(xyz, k_nn):
     """compute the knn graph"""

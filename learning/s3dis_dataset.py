@@ -63,7 +63,7 @@ def get_info(args):
 def preprocess_pointclouds(S3DIS_PATH):
     """ Preprocesses data by splitting them by components and normalizing."""
 
-    for n in range(1,7):
+    for n in range(1,2):
         pathP = '{}/parsed/Area_{:d}/'.format(S3DIS_PATH, n)
         pathD = '{}/features/Area_{:d}/'.format(S3DIS_PATH, n)
         pathC = '{}/superpoint_graphs/Area_{:d}/'.format(S3DIS_PATH, n)

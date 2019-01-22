@@ -9,17 +9,17 @@ import sys
 import numpy as np
 import argparse
 from timeit import default_timer as timer
-sys.path.append("./partition/cut-pursuit/src")
-sys.path.append("./partition/ply_c")
-sys.path.append("./partition")
+sys.path.append("/home/raphael/PhD/python/superpoint_graph/partition/cut-pursuit/src")
+sys.path.append("/home/raphael/PhD/python/superpoint_graph/partition/ply_c")
+sys.path.append("/home/raphael/PhD/python/superpoint_graph/partition")
 import libcp
 import libply_c
 from graphs import *
 from provider import *
 
 parser = argparse.ArgumentParser(description='Large-scale Point Cloud Semantic Segmentation with Superpoint Graphs')
-parser.add_argument('--ROOT_PATH', default='datasets/s3dis')
-parser.add_argument('--dataset', default='s3dis', help='s3dis/sema3d/your_dataset')
+parser.add_argument('--ROOT_PATH', default='/home/raphael/PhD/data/hayko-varcity3dchallenge-3cb58e583578/data/ruemonge428')
+parser.add_argument('--dataset', default='custom_dataset', help='s3dis/sema3d/custom_dataset')
 parser.add_argument('--k_nn_geof', default=45, type=int, help='number of neighbors for the geometric features')
 parser.add_argument('--k_nn_adj', default=10, type=int, help='adjacency structure for the minimal partition')
 parser.add_argument('--lambda_edge_weight', default=1., type=float, help='parameter determine the edge weight for minimal part.')
@@ -34,14 +34,17 @@ args = parser.parse_args()
 root = args.ROOT_PATH+'/'
 #list of subfolders to be processed
 if args.dataset == 's3dis':
-    folders = ["Area_1/", "Area_2/", "Area_3/", "Area_4/", "Area_5/", "Area_6/"]
+    #folders = ["Area_1/", "Area_2/", "Area_3/", "Area_4/", "Area_5/", "Area_6/"]
+    folders = ["Area_1/"]
     n_labels = 13
 elif args.dataset == 'sema3d':
     folders = ["test_reduced/", "test_full/", "train/"]
     n_labels = 8
 elif args.dataset == 'custom_dataset':
-    folders = ["train/", "test/"]
-    n_labels = 10 #number of classes
+    #folders = ["train/", "test/"]
+    #folders = ["/home/raphael/PhD/data/hayko-varcity3dchallenge-3cb58e583578/data/ruemonge428/", "/home/raphael/PhD/data/hayko-varcity3dchallenge-3cb58e583578/data/ruemonge428/"]
+    folders = [root]
+    n_labels = 7 #number of classes
 else:
     raise ValueError('%s is an unknown data set' % dataset)
 
@@ -57,10 +60,11 @@ if not os.path.isdir(root + "superpoint_graphs"):
 for folder in folders:
     print("=================\n   "+folder+"\n=================")
     
-    data_folder = root   + "data/"              + folder
-    cloud_folder  = root + "clouds/"            + folder
-    fea_folder  = root   + "features/"          + folder
-    spg_folder  = root   + "superpoint_graphs/" + folder
+    #data_folder = root   + "data/"              + folder
+    data_folder = root
+    cloud_folder  = root + "clouds/"
+    fea_folder  = root   + "features/"
+    spg_folder  = root   + "superpoint_graphs/"
     if not os.path.isdir(data_folder):
         raise ValueError("%s does not exist" % data_folder)
         
@@ -79,8 +83,10 @@ for folder in folders:
     elif args.dataset=='custom_dataset':
         #list all ply files in the folder
         files = glob.glob(data_folder+"*.ply")
+        files = [data_folder + "pcl_gt_test.ply", data_folder + "pcl_gt_train.ply"]
+        print("files in dataset folder: ", files)
         #list all las files in the folder
-        files = glob.glob(data_folder+"*.las")
+        #files = glob.glob(data_folder+"*.las")
         
     if (len(files) == 0):
         raise ValueError('%s is empty' % data_folder)

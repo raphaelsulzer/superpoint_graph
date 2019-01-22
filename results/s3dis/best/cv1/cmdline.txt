@@ -1,0 +1,1 @@
+'learning/main.py' --dataset 's3dis' --S3DIS_PATH '/home/raphael/PhD/data/Stanford3dDataset_v1.2_Aligned_Version' --cvfold '1' --epochs '350' --lr_steps '[275,320]' --test_nth_epoch '50' --model_config 'gru_10_0,f_13' --ptn_nfeat_stn '14' --nworkers '2' --odir 'results/s3dis/best/cv1'
