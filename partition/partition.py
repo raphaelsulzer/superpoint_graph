@@ -83,7 +83,7 @@ for folder in folders:
     elif args.dataset=='custom_dataset':
         #list all ply files in the folder
         files = glob.glob(data_folder+"*.ply")
-        files = [data_folder + "pcl_gt_test.ply", data_folder + "pcl_gt_train.ply"]
+        files = [data_folder + "pcl_gt_train_withColor.ply"]
         print("files in dataset folder: ", files)
         #list all las files in the folder
         #files = glob.glob(data_folder+"*.las")
@@ -140,8 +140,10 @@ for folder in folders:
                 #implement in provider.py your own read_custom_format outputing xyz, rgb, labels
                 #example for ply files
                 xyz, rgb, labels = read_ply(data_file)
-                #another one for las files without rgb
-                xyz = read_las(data_file)
+
+                # #another one for las files without rgb
+                # xyz = read_las(data_file)
+
                 if args.voxel_width > 0:
                     #an example of pruning without labels
                     xyz, rgb, labels = libply_c.prune(xyz, args.voxel_width, rgb, np.array(1,dtype='u1'), 0)
