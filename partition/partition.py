@@ -20,12 +20,12 @@ from provider import *
 parser = argparse.ArgumentParser(description='Large-scale Point Cloud Semantic Segmentation with Superpoint Graphs')
 parser.add_argument('--ROOT_PATH', default='/home/raphael/PhD/data/hayko-varcity3dchallenge-3cb58e583578/data/ruemonge428')
 parser.add_argument('--dataset', default='custom_dataset', help='s3dis/sema3d/custom_dataset')
-parser.add_argument('--k_nn_geof', default=45, type=int, help='number of neighbors for the geometric features')
-parser.add_argument('--k_nn_adj', default=10, type=int, help='adjacency structure for the minimal partition')
+parser.add_argument('--k_nn_geof', default=10, type=int, help='number of neighbors for the geometric features')
+parser.add_argument('--k_nn_adj', default=5, type=int, help='adjacency structure for the minimal partition')
 parser.add_argument('--lambda_edge_weight', default=1., type=float, help='parameter determine the edge weight for minimal part.')
-parser.add_argument('--reg_strength', default=0.1, type=float, help='regularization strength for the minimal partition')
+parser.add_argument('--reg_strength', default=0.05, type=float, help='regularization strength for the minimal partition')
 parser.add_argument('--d_se_max', default=0, type=float, help='max length of super edges')
-parser.add_argument('--voxel_width', default=0.03, type=float, help='voxel size when subsampling (in m)')
+parser.add_argument('--voxel_width', default=0.05, type=float, help='voxel size when subsampling (in m)')
 parser.add_argument('--ver_batch', default=0, type=int, help='Batch size for reading large files, 0 do disable batch loading')
 parser.add_argument('--overwrite', default=0, type=int, help='Wether to read existing files or overwrite them')
 args = parser.parse_args()
@@ -43,7 +43,7 @@ elif args.dataset == 'sema3d':
 elif args.dataset == 'custom_dataset':
     #folders = ["train/", "test/"]
     #folders = ["/home/raphael/PhD/data/hayko-varcity3dchallenge-3cb58e583578/data/ruemonge428/", "/home/raphael/PhD/data/hayko-varcity3dchallenge-3cb58e583578/data/ruemonge428/"]
-    folders = [root]
+    folders = ['train/', 'test/']
     n_labels = 7 #number of classes
 else:
     raise ValueError('%s is an unknown data set' % dataset)
@@ -57,14 +57,22 @@ if not os.path.isdir(root + "features"):
 if not os.path.isdir(root + "superpoint_graphs"):
     os.mkdir(root + "superpoint_graphs")
 
+
 for folder in folders:
     print("=================\n   "+folder+"\n=================")
     
-    #data_folder = root   + "data/"              + folder
-    data_folder = root
-    cloud_folder  = root + "clouds/"
-    fea_folder  = root   + "features/"
-    spg_folder  = root   + "superpoint_graphs/"
+    # data_folder = root + folder
+    # cloud_folder  = root + folder + "clouds/"
+    # fea_folder  = root  + folder + "features/"
+    # spg_folder  = root  + folder + "superpoint_graphs/"
+
+    data_folder = root    + "data/" + folder
+    cloud_folder  = root + "clouds/"            + folder
+    fea_folder  = root   + "features/"          + folder
+    spg_folder  = root   + "superpoint_graphs/" + folder
+
+
+
     if not os.path.isdir(data_folder):
         raise ValueError("%s does not exist" % data_folder)
         
@@ -83,7 +91,7 @@ for folder in folders:
     elif args.dataset=='custom_dataset':
         #list all ply files in the folder
         files = glob.glob(data_folder+"*.ply")
-        files = [data_folder + "pcl_gt_train_withColor.ply"]
+        #files = [data_folder + "*.ply"]
         print("files in dataset folder: ", files)
         #list all las files in the folder
         #files = glob.glob(data_folder+"*.las")
@@ -141,16 +149,33 @@ for folder in folders:
                 #example for ply files
                 xyz, rgb, labels = read_ply(data_file)
 
+                print('xyz, rgb and label size before pruning')
+                print(xyz.shape)
+                print(rgb.shape)
+                print(labels.shape)
+
                 # #another one for las files without rgb
                 # xyz = read_las(data_file)
 
-                if args.voxel_width > 0:
-                    #an example of pruning without labels
-                    xyz, rgb, labels = libply_c.prune(xyz, args.voxel_width, rgb, np.array(1,dtype='u1'), 0)
-                    #another one without rgb information nor labels
-                    xyz = libply_c.prune(xyz, args.voxel_width, np.zeros(xyz.shape,dtype='u1'), np.array(1,dtype='u1'), 0)[0]
+                # if args.voxel_width > 0:
+                #     xyz, rgb, labels = libply_c.prune(xyz, args.voxel_width, rgb, labels, n_labels)
+                #
+                # # if args.voxel_width > 0:
+                # #     #an example of pruning without labels
+                # #     xyz, rgb, labels = libply_c.prune(xyz, args.voxel_width, rgb, np.array(1,dtype='u1'), 0)
+                # #     #another one without rgb information nor labels
+                # #     xyz = libply_c.prune(xyz, args.voxel_width, np.zeros(xyz.shape,dtype='u1'), np.array(1,dtype='u1'), 0)[0]
+                #
+                # print('xyz, rgb and label size after pruning')
+                # print(xyz.shape)
+                # print(rgb.shape)
+                # print(labels.shape)
+
                 #if no labels available simply set here labels = []
                 #if no rgb available simply set here rgb = [] and make sure to not use it later on
+
+
+
             start = timer()
             #---compute 10 nn graph-------
             graph_nn, target_fea = compute_graph_nn_2(xyz, args.k_nn_adj, args.k_nn_geof)
@@ -160,6 +185,9 @@ for folder in folders:
             times[0] = times[0] + end - start
             del target_fea
             write_features(fea_file, geof, xyz, rgb, graph_nn, labels)
+
+
+
         #--compute the partition------
         sys.stdout.flush()
         if os.path.isfile(spg_file) and not args.overwrite:
@@ -177,8 +205,8 @@ for folder in folders:
                  geof[:,3] = 2. * geof[:, 3]
             elif args.dataset=='custom_dataset':
                 #choose here which features to use for the partition
-                 features = geof
-                 geof[:,3] = 2. * geof[:, 3]
+                features = np.hstack((geof, rgb / 255.)).astype('float32')  # add rgb as a feature for partitioning
+                geof[:,3] = 2. * geof[:, 3]
                 
             graph_nn["edge_weight"] = np.array(1. / ( args.lambda_edge_weight + graph_nn["distances"] / np.mean(graph_nn["distances"])), dtype = 'float32')
             print("        minimal partition...")

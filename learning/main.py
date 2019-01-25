@@ -41,33 +41,33 @@ def main():
     parser.add_argument('--wd', default=0, type=float, help='Weight decay')
     parser.add_argument('--lr', default=1e-2, type=float, help='Initial learning rate')
     parser.add_argument('--lr_decay', default=0.7, type=float, help='Multiplicative factor used on learning rate at `lr_steps`')
-    parser.add_argument('--lr_steps', default='[]', help='List of epochs where the learning rate is decreased by `lr_decay`')
+    parser.add_argument('--lr_steps', default='[70,90]', help='List of epochs where the learning rate is decreased by `lr_decay`')
     parser.add_argument('--momentum', default=0.9, type=float, help='Momentum')
-    parser.add_argument('--epochs', default=10, type=int, help='Number of epochs to train. If <=0, only testing will be done.')
-    parser.add_argument('--batch_size', default=2, type=int, help='Batch size')
+    parser.add_argument('--epochs', default=100, type=int, help='Number of epochs to train. If <=0, only testing will be done.')
+    parser.add_argument('--batch_size', default=1, type=int, help='Batch size that is loaded in the GPU')
     parser.add_argument('--optim', default='adam', help='Optimizer: sgd|adam')
     parser.add_argument('--grad_clip', default=1, type=float, help='Element-wise clipping of gradient. If 0, does not clip')
 
     # Learning process arguments
-    parser.add_argument('--cuda', default=1, type=int, help='Bool, use cuda')
+    parser.add_argument('--cuda', default=0, type=int, help='Bool, use cuda')
     parser.add_argument('--nworkers', default=0, type=int, help='Num subprocesses to use for data loading. 0 means that the data will be loaded in the main process')
     parser.add_argument('--test_nth_epoch', default=1, type=int, help='Test each n-th epoch during training')
     parser.add_argument('--save_nth_epoch', default=1, type=int, help='Save model each n-th epoch during training')
     parser.add_argument('--test_multisamp_n', default=10, type=int, help='Average logits obtained over runs with different seeds')
 
     # Dataset
-    parser.add_argument('--dataset', default='sema3d', help='Dataset name: sema3d|s3dis')
-    parser.add_argument('--cvfold', default=0, type=int, help='Fold left-out for testing in leave-one-out setting (S3DIS)')
+    parser.add_argument('--dataset', default='custom_dataset', help='Dataset name: sema3d|s3dis')
+    parser.add_argument('--cvfold', default=1, type=int, help='Fold left-out for testing in leave-one-out setting (S3DIS)')
     parser.add_argument('--odir', default='results', help='Directory to store results')
     parser.add_argument('--resume', default='', help='Loads a previously saved model.')
     parser.add_argument('--db_train_name', default='train')
-    parser.add_argument('--db_test_name', default='val')
+    parser.add_argument('--db_test_name', default='test')
     parser.add_argument('--SEMA3D_PATH', default='datasets/semantic3d')
     parser.add_argument('--S3DIS_PATH', default='datasets/s3dis')
-    parser.add_argument('--CUSTOM_SET_PATH', default='datasets/custom_set')
+    parser.add_argument('--CUSTOM_SET_PATH', default='/home/raphael/PhD/data/hayko-varcity3dchallenge-3cb58e583578/data/ruemonge428')
 
     # Model
-    parser.add_argument('--model_config', default='gru_10,f_8', help='Defines the model as a sequence of layers, see graphnet.py for definitions of respective layers and acceptable arguments. In short: rectype_repeats_mv_layernorm_ingate_concat, with rectype the type of recurrent unit [gru/crf/lstm], repeats the number of message passing iterations, mv (default True) the use of matrix-vector (mv) instead vector-vector (vv) edge filters, layernorm (default True) the use of layernorms in the recurrent units, ingate (default True) the use of input gating, concat (default True) the use of state concatenation')
+    parser.add_argument('--model_config', default='gru_0,f_8', help='Defines the model as a sequence of layers, see graphnet.py for definitions of respective layers and acceptable arguments. In short: rectype_repeats_mv_layernorm_ingate_concat, with rectype the type of recurrent unit [gru/crf/lstm], repeats the number of message passing iterations, mv (default True) the use of matrix-vector (mv) instead vector-vector (vv) edge filters, layernorm (default True) the use of layernorms in the recurrent units, ingate (default True) the use of input gating, concat (default True) the use of state concatenation')
     parser.add_argument('--seed', default=1, type=int, help='Seed for random initialisation')
     parser.add_argument('--edge_attribs', default='delta_avg,delta_std,nlength/ld,surface/ld,volume/ld,size/ld,xyz/d', help='Edge attribute definition, see spg_edge_features() in spg.py for definitions.')
 
@@ -96,8 +96,8 @@ def main():
     # Point net
     parser.add_argument('--ptn_minpts', default=40, type=int, help='Minimum number of points in a superpoint for computing its embedding.')
     parser.add_argument('--ptn_npts', default=128, type=int, help='Number of input points for PointNet.')
-    parser.add_argument('--ptn_widths', default='[[64,64,128,128,256], [256,64,32]]', help='PointNet widths')
-    parser.add_argument('--ptn_widths_stn', default='[[64,64,128], [128,64]]', help='PointNet\'s Transformer widths')
+    parser.add_argument('--ptn_widths', default='[[32,32,64,128], [128,64,32]]', help='PointNet widths')
+    parser.add_argument('--ptn_widths_stn', default='[[16,32,64], [32,16]]', help='PointNet\'s Transformer widths')
     parser.add_argument('--ptn_nfeat_stn', default=11, type=int, help='PointNet\'s Transformer number of input features')
     parser.add_argument('--ptn_prelast_do', default=0, type=float)
     parser.add_argument('--ptn_mem_monger', default=1, type=int, help='Bool, save GPU memory by recomputing PointNets in back propagation.')
@@ -132,9 +132,9 @@ def main():
         dbinfo = s3dis_dataset.get_info(args)
         create_dataset = s3dis_dataset.get_datasets
     elif args.dataset=='custom_dataset':
-        import custom_dataset #<- to write!
-        dbinfo = custom_dataset.get_info(args)
-        create_dataset = custom_dataset.get_datasets
+        import varcity3d_dataset #<- to write!
+        dbinfo = varcity3d_dataset.get_info(args)
+        create_dataset = varcity3d_dataset.get_datasets
     else:
         raise NotImplementedError('Unknown dataset ' + args.dataset)
 
@@ -143,6 +143,7 @@ def main():
         if args.resume=='RESUME': args.resume = args.odir + '/model.pth.tar'
         model, optimizer, stats = resume(args, dbinfo)
     else:
+        print('new model')
         model = create_model(args, dbinfo)
         optimizer = create_optimizer(args, model)
         stats = []
@@ -187,13 +188,15 @@ def main():
             loss.backward()
             ptnCloudEmbedder.bw_hook()
 
+
+
             if args.grad_clip>0:
                 for p in model.parameters():
                     p.grad.data.clamp_(-args.grad_clip, args.grad_clip)
             optimizer.step()
 
             t_trainer = 1000*(time.time()-t0)
-            loss_meter.add(loss.data[0])
+            loss_meter.add(loss.item())
 
             o_cpu, t_cpu, tvec_cpu = filter_valid(outputs.data.cpu().numpy(), label_mode_cpu.numpy(), label_vec_cpu.numpy())
             acc_meter.add(o_cpu, t_cpu)
@@ -201,6 +204,11 @@ def main():
 
             logging.debug('Batch loss %f, Loader time %f ms, Trainer time %f ms.', loss.data[0], t_loader, t_trainer)
             t0 = time.time()
+
+        print(loss_meter.value()[0])
+        print(acc_meter.value())
+        print(confusion_matrix.value()[0])
+
 
         return acc_meter.value()[0], loss_meter.value()[0], confusion_matrix.get_overall_accuracy(), confusion_matrix.get_average_intersection_union()
 
@@ -284,6 +292,7 @@ def main():
         scheduler.step()
 
         acc, loss, oacc, avg_iou = train()
+
 
         if (epoch+1) % args.test_nth_epoch == 0 or epoch+1==args.epochs:
             acc_test, oacc_test, avg_iou_test, avg_acc_test = eval()
