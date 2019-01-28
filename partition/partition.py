@@ -16,18 +16,19 @@ import libcp
 import libply_c
 from graphs import *
 from provider import *
+from sklearn import preprocessing
 
 parser = argparse.ArgumentParser(description='Large-scale Point Cloud Semantic Segmentation with Superpoint Graphs')
 parser.add_argument('--ROOT_PATH', default='/home/raphael/PhD/data/hayko-varcity3dchallenge-3cb58e583578/data/ruemonge428')
 parser.add_argument('--dataset', default='custom_dataset', help='s3dis/sema3d/custom_dataset')
-parser.add_argument('--k_nn_geof', default=10, type=int, help='number of neighbors for the geometric features')
-parser.add_argument('--k_nn_adj', default=5, type=int, help='adjacency structure for the minimal partition')
+parser.add_argument('--k_nn_geof', default=12, type=int, help='number of neighbors for the geometric features')
+parser.add_argument('--k_nn_adj', default=3, type=int, help='adjacency structure for the minimal partition')
 parser.add_argument('--lambda_edge_weight', default=1., type=float, help='parameter determine the edge weight for minimal part.')
-parser.add_argument('--reg_strength', default=0.05, type=float, help='regularization strength for the minimal partition')
+parser.add_argument('--reg_strength', default=0.04, type=float, help='regularization strength for the minimal partition')
 parser.add_argument('--d_se_max', default=0, type=float, help='max length of super edges')
-parser.add_argument('--voxel_width', default=0.05, type=float, help='voxel size when subsampling (in m)')
+parser.add_argument('--voxel_width', default=0, type=float, help='voxel size when subsampling (in m)')
 parser.add_argument('--ver_batch', default=0, type=int, help='Batch size for reading large files, 0 do disable batch loading')
-parser.add_argument('--overwrite', default=0, type=int, help='Wether to read existing files or overwrite them')
+parser.add_argument('--overwrite', default=1, type=int, help='Wether to read existing files or overwrite them')
 args = parser.parse_args()
 
 #path to data
@@ -125,6 +126,7 @@ for folder in folders:
         
         i_file = i_file + 1
         print(str(i_file) + " / " + str(n_files) + "---> "+file_name)
+
         #--- build the geometric feature file h5 file ---
         if os.path.isfile(fea_file) and not args.overwrite:
             print("    reading the existing feature file...")
@@ -148,31 +150,6 @@ for folder in folders:
                 #implement in provider.py your own read_custom_format outputing xyz, rgb, labels
                 #example for ply files
                 xyz, rgb, labels = read_ply(data_file)
-
-                print('xyz, rgb and label size before pruning')
-                print(xyz.shape)
-                print(rgb.shape)
-                print(labels.shape)
-
-                # #another one for las files without rgb
-                # xyz = read_las(data_file)
-
-                # if args.voxel_width > 0:
-                #     xyz, rgb, labels = libply_c.prune(xyz, args.voxel_width, rgb, labels, n_labels)
-                #
-                # # if args.voxel_width > 0:
-                # #     #an example of pruning without labels
-                # #     xyz, rgb, labels = libply_c.prune(xyz, args.voxel_width, rgb, np.array(1,dtype='u1'), 0)
-                # #     #another one without rgb information nor labels
-                # #     xyz = libply_c.prune(xyz, args.voxel_width, np.zeros(xyz.shape,dtype='u1'), np.array(1,dtype='u1'), 0)[0]
-                #
-                # print('xyz, rgb and label size after pruning')
-                # print(xyz.shape)
-                # print(rgb.shape)
-                # print(labels.shape)
-
-                #if no labels available simply set here labels = []
-                #if no rgb available simply set here rgb = [] and make sure to not use it later on
 
 
 
@@ -205,9 +182,13 @@ for folder in folders:
                  geof[:,3] = 2. * geof[:, 3]
             elif args.dataset=='custom_dataset':
                 #choose here which features to use for the partition
-                features = np.hstack((geof, rgb / 255.)).astype('float32')  # add rgb as a feature for partitioning
-                geof[:,3] = 2. * geof[:, 3]
-                
+
+                #geof[:,3] = 2. * geof[:, 3]
+
+                features = np.hstack((geof, rgb)).astype('float32')  # add rgb as a feature for partitioning
+                features = preprocessing.normalize(features)
+
+
             graph_nn["edge_weight"] = np.array(1. / ( args.lambda_edge_weight + graph_nn["distances"] / np.mean(graph_nn["distances"])), dtype = 'float32')
             print("        minimal partition...")
             components, in_component = libcp.cutpursuit(features, graph_nn["source"], graph_nn["target"]

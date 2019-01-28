@@ -3,7 +3,7 @@ import numpy as np
 
 
 full = '/home/raphael/PhD/data/hayko-varcity3dchallenge-3cb58e583578/data/ruemonge428/original_data/pcl.ply'
-train = '/home/raphael/PhD/data/hayko-varcity3dchallenge-3cb58e583578/data/ruemonge428/original_data/pcl_gt_test.ply'
+train = '/home/raphael/PhD/data/hayko-varcity3dchallenge-3cb58e583578/data/ruemonge428/original_data/pcl_gt_train.ply'
 
 plydata_f = PlyData.read(full)
 plydata_tr = PlyData.read(train)
@@ -16,7 +16,7 @@ label_tr = np.stack([plydata_tr['vertex'][n] for n in['red', 'green', 'blue']], 
 #label_te = np.stack([plydata_te['vertex'][n] for n in['red', 'green', 'blue']], axis=1)
 
 
-file=open('/home/raphael/PhD/data/hayko-varcity3dchallenge-3cb58e583578/data/ruemonge428/pcl_gt_test_withColor.ply','w+')
+file=open('/home/raphael/PhD/data/hayko-varcity3dchallenge-3cb58e583578/data/ruemonge428/pcl_gt_train_withColor.ply','w+')
 
 # write ply file header
 file.write(

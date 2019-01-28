@@ -8,13 +8,19 @@ import numpy as np
 class ConfusionMatrix:
   """Streaming interface to allow for any source of predictions. Initialize it, count predictions one by one, then print confusion matrix and intersection-union score"""
   def __init__(self, number_of_labels = 2):
+    #print("n_of_labels: ", number_of_labels)
     self.number_of_labels = number_of_labels
     self.confusion_matrix = np.zeros(shape=(self.number_of_labels,self.number_of_labels))
   def count_predicted(self, ground_truth, predicted, number_of_added_elements=1):
     self.confusion_matrix[ground_truth][predicted] += number_of_added_elements
 
   def count_predicted_batch(self, ground_truth_vec, predicted): # added
+    #print(ground_truth_vec.shape[0])
     for i in range(ground_truth_vec.shape[0]):
+      #print("iterator: ", i)
+      #print("ground truth: ", ground_truth_vec[i, :])
+      #print(self.number_of_labels)
+      #print("predicted: ", predicted[:,i])
       self.confusion_matrix[:,predicted[i]] += ground_truth_vec[i,:]
 
   """labels are integers from 0 to number_of_labels-1"""

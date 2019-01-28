@@ -139,14 +139,14 @@ def get_color_from_label(object_label, dataset):
             }.get(object_label, -1)
     elif (dataset == 'custom_dataset'): #Custom set
         object_label =  {
-            0: [0   ,   0,   0], #unlabelled .->. black
-            1: [ 200, 200, 200], #'man-made terrain'  ->  grey
-            2: [   0,  70,   0], #'natural terrain'  ->  dark green
-            3: [   0, 255,   0], #'high vegetation'  ->  bright green
-            4: [ 255, 255,   0], #'low vegetation'  ->  yellow
-            5: [ 255,   0,   0], #'building'  ->  red
-            6: [ 148,   0, 211], #'hard scape'  ->  violet
-            7: [   0, 255, 255], #'artifact'   ->  cyan
+            0: [0, 0, 0], #unlabelled .->. black
+            1: [255, 255,   0], #'man-made terrain'  ->  grey
+            2: [255, 128,   0], #'natural terrain'  ->  dark green
+            3: [128, 255, 255], #'high vegetation'  ->  bright green
+            4: [125,   0, 255], #'low vegetation'  ->  yellow
+            5: [255,   0,   0], #'building'  ->  red
+            6: [  0, 255,   0], #'hard scape'  ->  violet
+            7: [  0,   0, 255], #'artifact'   ->  cyan
             }.get(object_label, -1)
     else: 
         raise ValueError('Unknown dataset: %s' % (dataset))

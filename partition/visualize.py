@@ -15,13 +15,15 @@ from provider import *
 parser = argparse.ArgumentParser(description='Large-scale Point Cloud Semantic Segmentation with Superpoint Graphs')
 parser.add_argument('--dataset', default='custom_dataset', help='dataset name: sema3d|s3dis')
 parser.add_argument('--ROOT_PATH', default='/home/raphael/PhD/data/hayko-varcity3dchallenge-3cb58e583578/data/ruemonge428', help='folder containing the ./data folder')
-parser.add_argument('--res_file', default='../models/cv1/predictions_val', help='folder containing the results')
-parser.add_argument('--file_path', default='train/', help='file to output (must include the area / set in its path)')
+parser.add_argument('--res_file', default='../learning/results/predictions_test', help='folder containing the results')
+parser.add_argument('--file_path', default='', help='file to output (must include the area / set in its path)')
 parser.add_argument('--upsample', default=0, type=int, help='if 1, upsample the prediction to the original cloud (if the files is huge it can take a very long and use a lot of memory - avoid on sema3d)')
 parser.add_argument('--ver_batch', default=0, type=int, help='Batch size for reading large files')
-parser.add_argument('--output_type', default='igfps', help='which cloud to output: i = input rgb pointcloud \
+parser.add_argument('--output_type', default='gfpres', help='which cloud to output: i = input rgb pointcloud \
                     , g = ground truth, f = geometric features, p = partition, r = prediction result \
                     , e = error, s = SPG')
+#'igfpres'
+
 args = parser.parse_args()
 #---path to data---------------------------------------------------------------
 #root of the data directory
@@ -36,7 +38,7 @@ spg_out = 's' in args.output_type
 # folder = os.path.split(args.file_path)[0] + '/'
 # file_name = os.path.split(args.file_path)[1]
 folder = args.file_path
-file_name = 'pcl_gt_train_withColor'
+file_name = 'test/pcl_gt_test_withColor'
 
 if args.dataset == 's3dis':
     n_labels = 13

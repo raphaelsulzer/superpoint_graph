@@ -93,7 +93,7 @@ def get_info(args):
         'node_feats': 14 if args.pc_attribs=='' else len(args.pc_attribs),
         'edge_feats': edge_feats,
         'classes': 7,
-        'inv_class_map': {0:'ceiling', 1:'floor', 2:'wall', 3:'column', 4:'beam', 5:'window', 6:'door', 7:'table'},
+        'inv_class_map': {0:'facade', 1:'door', 2:'sky', 3:'balcony', 4:'window', 5:'shop', 6:'roof'},
     }
 
 

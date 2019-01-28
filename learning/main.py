@@ -46,7 +46,7 @@ def main():
     parser.add_argument('--epochs', default=100, type=int, help='Number of epochs to train. If <=0, only testing will be done.')
     parser.add_argument('--batch_size', default=1, type=int, help='Batch size that is loaded in the GPU')
     parser.add_argument('--optim', default='adam', help='Optimizer: sgd|adam')
-    parser.add_argument('--grad_clip', default=1, type=float, help='Element-wise clipping of gradient. If 0, does not clip')
+    parser.add_argument('--grad_clip', default=0, type=float, help='Element-wise clipping of gradient. If 0, does not clip')
 
     # Learning process arguments
     parser.add_argument('--cuda', default=0, type=int, help='Bool, use cuda')
@@ -67,7 +67,7 @@ def main():
     parser.add_argument('--CUSTOM_SET_PATH', default='/home/raphael/PhD/data/hayko-varcity3dchallenge-3cb58e583578/data/ruemonge428')
 
     # Model
-    parser.add_argument('--model_config', default='gru_0,f_8', help='Defines the model as a sequence of layers, see graphnet.py for definitions of respective layers and acceptable arguments. In short: rectype_repeats_mv_layernorm_ingate_concat, with rectype the type of recurrent unit [gru/crf/lstm], repeats the number of message passing iterations, mv (default True) the use of matrix-vector (mv) instead vector-vector (vv) edge filters, layernorm (default True) the use of layernorms in the recurrent units, ingate (default True) the use of input gating, concat (default True) the use of state concatenation')
+    parser.add_argument('--model_config', default='gru_0,f_7', help='Defines the model as a sequence of layers, see graphnet.py for definitions of respective layers and acceptable arguments. In short: rectype_repeats_mv_layernorm_ingate_concat, with rectype the type of recurrent unit [gru/crf/lstm], repeats the number of message passing iterations, mv (default True) the use of matrix-vector (mv) instead vector-vector (vv) edge filters, layernorm (default True) the use of layernorms in the recurrent units, ingate (default True) the use of input gating, concat (default True) the use of state concatenation')
     parser.add_argument('--seed', default=1, type=int, help='Seed for random initialisation')
     parser.add_argument('--edge_attribs', default='delta_avg,delta_std,nlength/ld,surface/ld,volume/ld,size/ld,xyz/d', help='Edge attribute definition, see spg_edge_features() in spg.py for definitions.')
 
@@ -94,7 +94,7 @@ def main():
     parser.add_argument('--spg_superedge_cutoff', default=-1, type=float, help='Artificially constrained maximum length of superedge, -1=do not constrain')
 
     # Point net
-    parser.add_argument('--ptn_minpts', default=40, type=int, help='Minimum number of points in a superpoint for computing its embedding.')
+    parser.add_argument('--ptn_minpts', default=20, type=int, help='Minimum number of points in a superpoint for computing its embedding.')
     parser.add_argument('--ptn_npts', default=128, type=int, help='Number of input points for PointNet.')
     parser.add_argument('--ptn_widths', default='[[32,32,64,128], [128,64,32]]', help='PointNet widths')
     parser.add_argument('--ptn_widths_stn', default='[[16,32,64], [32,16]]', help='PointNet\'s Transformer widths')
@@ -163,6 +163,7 @@ def main():
 
         loss_meter = tnt.meter.AverageValueMeter()
         acc_meter = tnt.meter.ClassErrorMeter(accuracy=True)
+        #print("number_of_classes: ", dbinfo['classes'])
         confusion_matrix = metrics.ConfusionMatrix(dbinfo['classes'])
         t0 = time.time()
 
@@ -202,12 +203,8 @@ def main():
             acc_meter.add(o_cpu, t_cpu)
             confusion_matrix.count_predicted_batch(tvec_cpu, np.argmax(o_cpu,1))
 
-            logging.debug('Batch loss %f, Loader time %f ms, Trainer time %f ms.', loss.data[0], t_loader, t_trainer)
+            logging.debug('Batch loss %f, Loader time %f ms, Trainer time %f ms.', loss.item(), t_loader, t_trainer)
             t0 = time.time()
-
-        print(loss_meter.value()[0])
-        print(acc_meter.value())
-        print(confusion_matrix.value()[0])
 
 
         return acc_meter.value()[0], loss_meter.value()[0], confusion_matrix.get_overall_accuracy(), confusion_matrix.get_average_intersection_union()
