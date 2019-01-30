@@ -24,7 +24,7 @@ parser.add_argument('--dataset', default='custom_dataset', help='s3dis/sema3d/cu
 parser.add_argument('--k_nn_geof', default=12, type=int, help='number of neighbors for the geometric features')
 parser.add_argument('--k_nn_adj', default=3, type=int, help='adjacency structure for the minimal partition')
 parser.add_argument('--lambda_edge_weight', default=1., type=float, help='parameter determine the edge weight for minimal part.')
-parser.add_argument('--reg_strength', default=0.04, type=float, help='regularization strength for the minimal partition')
+parser.add_argument('--reg_strength', default=0.03, type=float, help='regularization strength for the minimal partition')
 parser.add_argument('--d_se_max', default=0, type=float, help='max length of super edges')
 parser.add_argument('--voxel_width', default=0, type=float, help='voxel size when subsampling (in m)')
 parser.add_argument('--ver_batch', default=0, type=int, help='Batch size for reading large files, 0 do disable batch loading')
