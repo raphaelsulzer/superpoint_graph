@@ -43,7 +43,7 @@ def main():
     parser.add_argument('--lr_decay', default=0.7, type=float, help='Multiplicative factor used on learning rate at `lr_steps`')
     parser.add_argument('--lr_steps', default='[70,90]', help='List of epochs where the learning rate is decreased by `lr_decay`')
     parser.add_argument('--momentum', default=0.9, type=float, help='Momentum')
-    parser.add_argument('--epochs', default=100, type=int, help='Number of epochs to train. If <=0, only testing will be done.')
+    parser.add_argument('--epochs', default=25, type=int, help='Number of epochs to train. If <=0, only testing will be done.')
     parser.add_argument('--batch_size', default=1, type=int, help='Batch size that is loaded in the GPU')
     parser.add_argument('--optim', default='adam', help='Optimizer: sgd|adam')
     parser.add_argument('--grad_clip', default=0, type=float, help='Element-wise clipping of gradient. If 0, does not clip')
@@ -57,14 +57,14 @@ def main():
 
     # Dataset
     parser.add_argument('--dataset', default='custom_dataset', help='Dataset name: sema3d|s3dis')
-    parser.add_argument('--cvfold', default=1, type=int, help='Fold left-out for testing in leave-one-out setting (S3DIS)')
+    parser.add_argument('--cvfold', default=4, type=int, help='Fold left-out for testing in leave-one-out setting (S3DIS)')
     parser.add_argument('--odir', default='results', help='Directory to store results')
     parser.add_argument('--resume', default='', help='Loads a previously saved model.')
     parser.add_argument('--db_train_name', default='train')
     parser.add_argument('--db_test_name', default='test')
     parser.add_argument('--SEMA3D_PATH', default='datasets/semantic3d')
     parser.add_argument('--S3DIS_PATH', default='datasets/s3dis')
-    parser.add_argument('--CUSTOM_SET_PATH', default='/home/raphael/PhD/data/hayko-varcity3dchallenge-3cb58e583578/data/ruemonge428')
+    parser.add_argument('--CUSTOM_SET_PATH', default='/home/raphael/PhD/data/varcity3d/data/ruemonge428')
 
     # Model
     parser.add_argument('--model_config', default='gru_0,f_7', help='Defines the model as a sequence of layers, see graphnet.py for definitions of respective layers and acceptable arguments. In short: rectype_repeats_mv_layernorm_ingate_concat, with rectype the type of recurrent unit [gru/crf/lstm], repeats the number of message passing iterations, mv (default True) the use of matrix-vector (mv) instead vector-vector (vv) edge filters, layernorm (default True) the use of layernorms in the recurrent units, ingate (default True) the use of input gating, concat (default True) the use of state concatenation')
@@ -75,7 +75,7 @@ def main():
     parser.add_argument('--pc_attribs', default='', help='Point attributes fed to PointNets, if empty then all possible.')
     parser.add_argument('--pc_augm_scale', default=0, type=float, help='Training augmentation: Uniformly random scaling in [1/scale, scale]')
     parser.add_argument('--pc_augm_rot', default=1, type=int, help='Training augmentation: Bool, random rotation around z-axis')
-    parser.add_argument('--pc_augm_mirror_prob', default=0, type=float, help='Training augmentation: Probability of mirroring about x or y axes')
+    parser.add_argument('--pc_augm_mirror_prob', default=1, type=float, help='Training augmentation: Probability of mirroring about x or y axes')
     parser.add_argument('--pc_augm_jitter', default=1, type=int, help='Training augmentation: Bool, Gaussian jittering of all attributes')
     parser.add_argument('--pc_xyznormalize', default=1, type=int, help='Bool, normalize xyz into unit ball, i.e. in [-0.5,0.5]')
 
@@ -96,8 +96,8 @@ def main():
     # Point net
     parser.add_argument('--ptn_minpts', default=20, type=int, help='Minimum number of points in a superpoint for computing its embedding.')
     parser.add_argument('--ptn_npts', default=128, type=int, help='Number of input points for PointNet.')
-    parser.add_argument('--ptn_widths', default='[[32,32,64,128], [128,64,32]]', help='PointNet widths')
-    parser.add_argument('--ptn_widths_stn', default='[[16,32,64], [32,16]]', help='PointNet\'s Transformer widths')
+    parser.add_argument('--ptn_widths', default='[[16,16,32,64], [64,32,16]]', help='PointNet widths')
+    parser.add_argument('--ptn_widths_stn', default='[[8,16,32], [16,8]]', help='PointNet\'s Transformer widths')
     parser.add_argument('--ptn_nfeat_stn', default=11, type=int, help='PointNet\'s Transformer number of input features')
     parser.add_argument('--ptn_prelast_do', default=0, type=float)
     parser.add_argument('--ptn_mem_monger', default=1, type=int, help='Bool, save GPU memory by recomputing PointNets in back propagation.')

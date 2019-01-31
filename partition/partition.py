@@ -19,7 +19,7 @@ from provider import *
 from sklearn import preprocessing
 
 parser = argparse.ArgumentParser(description='Large-scale Point Cloud Semantic Segmentation with Superpoint Graphs')
-parser.add_argument('--ROOT_PATH', default='/home/raphael/PhD/data/hayko-varcity3dchallenge-3cb58e583578/data/ruemonge428')
+parser.add_argument('--ROOT_PATH', default='/home/raphael/PhD/data/varcity3d/data/ruemonge428')
 parser.add_argument('--dataset', default='custom_dataset', help='s3dis/sema3d/custom_dataset')
 parser.add_argument('--k_nn_geof', default=12, type=int, help='number of neighbors for the geometric features')
 parser.add_argument('--k_nn_adj', default=3, type=int, help='adjacency structure for the minimal partition')
@@ -44,7 +44,7 @@ elif args.dataset == 'sema3d':
 elif args.dataset == 'custom_dataset':
     #folders = ["train/", "test/"]
     #folders = ["/home/raphael/PhD/data/hayko-varcity3dchallenge-3cb58e583578/data/ruemonge428/", "/home/raphael/PhD/data/hayko-varcity3dchallenge-3cb58e583578/data/ruemonge428/"]
-    folders = ['train/', 'test/']
+    folders = ['cut/']
     n_labels = 7 #number of classes
 else:
     raise ValueError('%s is an unknown data set' % dataset)

@@ -275,7 +275,7 @@ def read_ply(filename):
         return xyz, rgb, labels, object_indices
     except ValueError:
         try:
-            labels = plydata['vertex']['label']
+            labels = plydata['vertex']['scalar_label']
             return xyz, rgb, labels
         except ValueError:
             return xyz, rgb
