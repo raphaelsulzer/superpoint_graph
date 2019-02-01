@@ -43,10 +43,10 @@ def main():
     parser.add_argument('--lr_decay', default=0.7, type=float, help='Multiplicative factor used on learning rate at `lr_steps`')
     parser.add_argument('--lr_steps', default='[70,90]', help='List of epochs where the learning rate is decreased by `lr_decay`')
     parser.add_argument('--momentum', default=0.9, type=float, help='Momentum')
-    parser.add_argument('--epochs', default=25, type=int, help='Number of epochs to train. If <=0, only testing will be done.')
+    parser.add_argument('--epochs', default=100, type=int, help='Number of epochs to train. If <=0, only testing will be done.')
     parser.add_argument('--batch_size', default=1, type=int, help='Batch size that is loaded in the GPU')
     parser.add_argument('--optim', default='adam', help='Optimizer: sgd|adam')
-    parser.add_argument('--grad_clip', default=0, type=float, help='Element-wise clipping of gradient. If 0, does not clip')
+    parser.add_argument('--grad_clip', default=1, type=float, help='Element-wise clipping of gradient. If 0, does not clip')
 
     # Learning process arguments
     parser.add_argument('--cuda', default=0, type=int, help='Bool, use cuda')
@@ -67,7 +67,7 @@ def main():
     parser.add_argument('--CUSTOM_SET_PATH', default='/home/raphael/PhD/data/varcity3d/data/ruemonge428')
 
     # Model
-    parser.add_argument('--model_config', default='gru_0,f_7', help='Defines the model as a sequence of layers, see graphnet.py for definitions of respective layers and acceptable arguments. In short: rectype_repeats_mv_layernorm_ingate_concat, with rectype the type of recurrent unit [gru/crf/lstm], repeats the number of message passing iterations, mv (default True) the use of matrix-vector (mv) instead vector-vector (vv) edge filters, layernorm (default True) the use of layernorms in the recurrent units, ingate (default True) the use of input gating, concat (default True) the use of state concatenation')
+    parser.add_argument('--model_config', default='gru_10,f_7', help='Defines the model as a sequence of layers, see graphnet.py for definitions of respective layers and acceptable arguments. In short: rectype_repeats_mv_layernorm_ingate_concat, with rectype the type of recurrent unit [gru/crf/lstm], repeats the number of message passing iterations, mv (default True) the use of matrix-vector (mv) instead vector-vector (vv) edge filters, layernorm (default True) the use of layernorms in the recurrent units, ingate (default True) the use of input gating, concat (default True) the use of state concatenation')
     parser.add_argument('--seed', default=1, type=int, help='Seed for random initialisation')
     parser.add_argument('--edge_attribs', default='delta_avg,delta_std,nlength/ld,surface/ld,volume/ld,size/ld,xyz/d', help='Edge attribute definition, see spg_edge_features() in spg.py for definitions.')
 
@@ -89,18 +89,18 @@ def main():
     # Superpoint graph
     parser.add_argument('--spg_attribs01', default=1, type=int, help='Bool, normalize edge features to 0 mean 1 deviation')
     parser.add_argument('--spg_augm_nneigh', default=100, type=int, help='Number of neighborhoods to sample in SPG')
-    parser.add_argument('--spg_augm_order', default=3, type=int, help='Order of neighborhoods to sample in SPG')
-    parser.add_argument('--spg_augm_hardcutoff', default=512, type=int, help='Maximum number of superpoints larger than args.ptn_minpts to sample in SPG')
+    parser.add_argument('--spg_augm_order', default=5, type=int, help='Order of neighborhoods to sample in SPG')
+    parser.add_argument('--spg_augm_hardcutoff', default=256, type=int, help='Maximum number of superpoints larger than args.ptn_minpts to sample in SPG')
     parser.add_argument('--spg_superedge_cutoff', default=-1, type=float, help='Artificially constrained maximum length of superedge, -1=do not constrain')
 
     # Point net
-    parser.add_argument('--ptn_minpts', default=20, type=int, help='Minimum number of points in a superpoint for computing its embedding.')
+    parser.add_argument('--ptn_minpts', default=10, type=int, help='Minimum number of points in a superpoint for computing its embedding.')
     parser.add_argument('--ptn_npts', default=128, type=int, help='Number of input points for PointNet.')
-    parser.add_argument('--ptn_widths', default='[[16,16,32,64], [64,32,16]]', help='PointNet widths')
+    parser.add_argument('--ptn_widths', default='[[16,32,32,64], [64,32,32]]', help='PointNet widths')
     parser.add_argument('--ptn_widths_stn', default='[[8,16,32], [16,8]]', help='PointNet\'s Transformer widths')
     parser.add_argument('--ptn_nfeat_stn', default=11, type=int, help='PointNet\'s Transformer number of input features')
     parser.add_argument('--ptn_prelast_do', default=0, type=float)
-    parser.add_argument('--ptn_mem_monger', default=1, type=int, help='Bool, save GPU memory by recomputing PointNets in back propagation.')
+    parser.add_argument('--ptn_mem_monger', default=0, type=int, help='Bool, save GPU memory by recomputing PointNets in back propagation.')
 
     args = parser.parse_args()
     args.start_epoch = 0
@@ -182,10 +182,14 @@ def main():
             optimizer.zero_grad()
             t0 = time.time()
 
+
             embeddings = ptnCloudEmbedder.run(model, *clouds_data)
             outputs = model.ecc(embeddings)
 
             loss = nn.functional.cross_entropy(outputs, Variable(label_mode))
+
+            embeddings.require_grad = True
+
             loss.backward()
             ptnCloudEmbedder.bw_hook()
 

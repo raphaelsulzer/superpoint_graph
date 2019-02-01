@@ -7,6 +7,8 @@ from __future__ import division
 from __future__ import print_function
 from builtins import range
 
+from sklearn import preprocessing
+
 import random
 import numpy as np
 import os
@@ -16,24 +18,32 @@ import torchnet as tnt
 import h5py
 import spg
 
+from sklearn.model_selection import train_test_split
+
+
+
 def get_datasets(args, test_seed_offset=0):
     """ Gets training and test datasets. """
 
     # Load superpoints graphs
-    testlist, trainlist = [], []
+    split = []
     # for n in range(1,14):
     #     if n != args.cvfold:
 
     path = '{}/superpoint_graphs/cut/'.format(args.CUSTOM_SET_PATH)
     for fname in sorted(os.listdir(path)):
         if fname.endswith(".h5"):
-            #print("h5 file found")
-            trainlist.append(spg.spg_reader(args, path + fname, True))
+            split.append(spg.spg_reader(args, path + fname, True))
 
-    path = '{}/superpoint_graphs/cut/'.format(args.CUSTOM_SET_PATH)
-    for fname in sorted(os.listdir(path)):
-        if fname.endswith(".h5"):
-            testlist.append(spg.spg_reader(args, path + fname, True))
+    trainlist = [split[0],split[1],split[2],split[4],split[5],split[6],split[8],split[9],split[10]]
+    testlist = [split[3],split[7],split[11],split[12]]
+
+
+
+    # path = '{}/superpoint_graphs/cut/'.format(args.CUSTOM_SET_PATH)
+    # for fname in sorted(os.listdir(path)):
+    #     if fname.endswith(".h5"):
+    #         testlist.append(spg.spg_reader(args, path + fname, True))
 
     # Normalize edge features
     if args.spg_attribs01:
@@ -52,42 +62,6 @@ def get_datasets(args, test_seed_offset=0):
                                     functools.partial(spg.loader, train=True, args=args, db_path=args.CUSTOM_SET_PATH)), \
            tnt.dataset.ListDataset([spg.spg_to_igraph(*tlist) for tlist in testlist],
                                     functools.partial(spg.loader, train=False, args=args, db_path=args.CUSTOM_SET_PATH, test_seed_offset=test_seed_offset))
-
-
-
-# def get_datasets(args, test_seed_offset=0):
-#
-#     # train_names = ['bildstein_station1', 'bildstein_station5', 'domfountain_station1', 'domfountain_station3', 'neugasse_station1', 'sg27_station1', 'sg27_station2', 'sg27_station5', 'sg27_station9', 'sg28_station4', 'untermaederbrunnen_station1']
-#     # valid_names = ['bildstein_station3', 'domfountain_station2', 'sg27_station4', 'untermaederbrunnen_station3']
-#     #
-#     if args.db_train_name == 'train':
-#         trainset = ['train/']
-#     elif args.db_train_name == 'test':
-#         testset = ['test/']
-#
-#     # if args.db_test_name == 'val':
-#     #     testset = ['train/' + f for f in valid_names]
-#     # elif args.db_test_name == 'testred':
-#     #     testset = ['test_reduced/' + os.path.splitext(f)[0] for f in os.listdir(args.SEMA3D_PATH + '/superpoint_graphs/test_reduced')]
-#     # elif args.db_test_name == 'testfull':
-#     #     testset = ['test_full/' + os.path.splitext(f)[0] for f in os.listdir(args.SEMA3D_PATH + '/superpoint_graphs/test_full')]
-#
-#     # Load superpoints graphs
-#     testlist = [spg.spg_reader(args, args.CUSTOM_SET_PATH + '/superpoint_graphs/test/pcl_gt_test_withColor' + '.h5', True)]
-#     trainlist = [spg.spg_reader(args, args.CUSTOM_SET_PATH + '/superpoint_graphs/train/pcl_gt_train_withColor' + '.h5', True)]
-#
-#     # Normalize edge features
-#     if args.spg_attribs01:
-#         trainlist, testlist = spg.scaler01(trainlist, testlist)
-#
-#     # aaa = tnt.dataset.ListDataset([spg.spg_to_igraph(*tlist) for tlist in trainlist],
-#     #                         functools.partial(spg.loader, train=True, args=args, db_path=args.CUSTOM_SET_PATH))
-#
-#
-#     return tnt.dataset.ListDataset([spg.spg_to_igraph(*tlist) for tlist in trainlist],
-#                                     functools.partial(spg.loader, train=True, args=args, db_path=args.CUSTOM_SET_PATH)), \
-#            tnt.dataset.ListDataset([spg.spg_to_igraph(*tlist) for tlist in testlist],
-#                                     functools.partial(spg.loader, train=False, args=args, db_path=args.CUSTOM_SET_PATH, test_seed_offset=test_seed_offset))
 
 
 
@@ -118,7 +92,7 @@ def preprocess_pointclouds(CUSTOM_SET_PATH):
         pathC = '{}/superpoint_graphs/{}/'.format(CUSTOM_SET_PATH, n)
         if not os.path.exists(pathP):
             os.makedirs(pathP)
-        random.seed(n)
+        #random.seed(n)
 
         for file in os.listdir(pathC):
             print(file)
@@ -127,27 +101,31 @@ def preprocess_pointclouds(CUSTOM_SET_PATH):
                 xyz = f['xyz'][:]
                 rgb = f['rgb'][:].astype(np.float)
                 elpsv = np.stack([ f['xyz'][:,2][:], f['linearity'][:], f['planarity'][:], f['scattering'][:], f['verticality'][:] ], axis=1)
-
-                # rescale to [-0.5,0.5]; keep xyz
-
-                elpsv[:,1:] -= 0.5
-
-
-
-                rgb = rgb/255.0 - 0.5
+                #lpsv = np.stack([ f['linearity'][:], f['planarity'][:], f['scattering'][:], f['verticality'][:] ], axis=1)
 
                 ma, mi = np.max(xyz,axis=0,keepdims=True), np.min(xyz,axis=0,keepdims=True)
                 xyzn = (xyz - mi) / (ma - mi + 1e-8)   # as in PointNet ("normalized location as to the room (from 0 to 1)")
+                #xyzn = preprocessing.normalize(xyz)
 
+
+
+                # rescale to [-0.5,0.5]; keep x
+                elpsv[:,1:] -= 0.5
                 elpsv[:, 0] = (elpsv[:, 0] - mi[0][2]) / 4 - 1  # (4m rough guess)
+                #elpsv[:, 0] = preprocessing.normalize()
 
-                print(xyz.shape)
-                print(xyzn.shape)
-                print(rgb.shape)
-                print(elpsv.shape)
-                print(elpsv.mean())
+                #lpsv = preprocessing.normalize(lpsv)
+
+                #rgb = preprocessing.normalize(rgb)
+                rgb = rgb/255.0 - 0.5
+
 
                 P = np.concatenate([xyz, rgb, elpsv, xyzn], axis=1)
+
+
+                # P = np.concatenate([xyz, rgb, elpsv, xyz], axis=1)
+                # P = preprocessing.normalize(P)
+
 
                 f = h5py.File(pathC + file, 'r')
                 numc = len(f['components'].keys())

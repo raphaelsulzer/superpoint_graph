@@ -22,9 +22,9 @@ parser = argparse.ArgumentParser(description='Large-scale Point Cloud Semantic S
 parser.add_argument('--ROOT_PATH', default='/home/raphael/PhD/data/varcity3d/data/ruemonge428')
 parser.add_argument('--dataset', default='custom_dataset', help='s3dis/sema3d/custom_dataset')
 parser.add_argument('--k_nn_geof', default=12, type=int, help='number of neighbors for the geometric features')
-parser.add_argument('--k_nn_adj', default=3, type=int, help='adjacency structure for the minimal partition')
+parser.add_argument('--k_nn_adj', default=5, type=int, help='adjacency structure for the minimal partition - how many neighbours one superpoint has')
 parser.add_argument('--lambda_edge_weight', default=1., type=float, help='parameter determine the edge weight for minimal part.')
-parser.add_argument('--reg_strength', default=0.03, type=float, help='regularization strength for the minimal partition')
+parser.add_argument('--reg_strength', default=0.025, type=float, help='regularization strength for the minimal partition')
 parser.add_argument('--d_se_max', default=0, type=float, help='max length of super edges')
 parser.add_argument('--voxel_width', default=0, type=float, help='voxel size when subsampling (in m)')
 parser.add_argument('--ver_batch', default=0, type=int, help='Batch size for reading large files, 0 do disable batch loading')
@@ -191,8 +191,7 @@ for folder in folders:
 
             graph_nn["edge_weight"] = np.array(1. / ( args.lambda_edge_weight + graph_nn["distances"] / np.mean(graph_nn["distances"])), dtype = 'float32')
             print("        minimal partition...")
-            components, in_component = libcp.cutpursuit(features, graph_nn["source"], graph_nn["target"]
-                                         , graph_nn["edge_weight"], args.reg_strength)
+            components, in_component = libcp.cutpursuit(features, graph_nn["source"], graph_nn["target"], graph_nn["edge_weight"], args.reg_strength)
             components = np.array(components, dtype = 'object')
             end = timer()
             times[1] = times[1] + end - start
