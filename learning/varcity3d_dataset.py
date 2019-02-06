@@ -26,24 +26,30 @@ def get_datasets(args, test_seed_offset=0):
     """ Gets training and test datasets. """
 
     # Load superpoints graphs
-    split = []
-    # for n in range(1,14):
-    #     if n != args.cvfold:
 
-    path = '{}/superpoint_graphs/cut/'.format(args.CUSTOM_SET_PATH)
-    for fname in sorted(os.listdir(path)):
-        if fname.endswith(".h5"):
-            split.append(spg.spg_reader(args, path + fname, True))
-
-    trainlist = [split[0],split[1],split[2],split[4],split[5],split[6],split[8],split[9],split[10]]
-    testlist = [split[3],split[7],split[11],split[12]]
-
-
-
+    ### all in one folder
+    # split = []
     # path = '{}/superpoint_graphs/cut/'.format(args.CUSTOM_SET_PATH)
     # for fname in sorted(os.listdir(path)):
     #     if fname.endswith(".h5"):
-    #         testlist.append(spg.spg_reader(args, path + fname, True))
+    #         split.append(spg.spg_reader(args, path + fname, True))
+    #
+    #
+    # trainlist = [split[0],split[1],split[2],split[4],split[5],split[6],split[8],split[9],split[10]]
+    # testlist = [split[3],split[7],split[11],split[12]]
+
+    ### in seperate folders
+    trainlist, testlist = [], []
+
+    path = '{}/superpoint_graphs/train/'.format(args.CUSTOM_SET_PATH)
+    for fname in sorted(os.listdir(path)):
+        if fname.endswith(".h5"):
+            trainlist.append(spg.spg_reader(args, path + fname, True))
+
+    path = '{}/superpoint_graphs/test/'.format(args.CUSTOM_SET_PATH)
+    for fname in sorted(os.listdir(path)):
+        if fname.endswith(".h5"):
+            testlist.append(spg.spg_reader(args, path + fname, True))
 
     # Normalize edge features
     if args.spg_attribs01:
@@ -86,7 +92,7 @@ def get_info(args):
 def preprocess_pointclouds(CUSTOM_SET_PATH):
     """ Preprocesses data by splitting them by components and normalizing."""
 
-    for n in ['cut']:
+    for n in ['train', 'test']:
         pathP = '{}/parsed/{}/'.format(CUSTOM_SET_PATH, n)
         pathD = '{}/features/{}/'.format(CUSTOM_SET_PATH, n)
         pathC = '{}/superpoint_graphs/{}/'.format(CUSTOM_SET_PATH, n)

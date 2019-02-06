@@ -53,7 +53,7 @@ def main():
     parser.add_argument('--nworkers', default=0, type=int, help='Num subprocesses to use for data loading. 0 means that the data will be loaded in the main process')
     parser.add_argument('--test_nth_epoch', default=1, type=int, help='Test each n-th epoch during training')
     parser.add_argument('--save_nth_epoch', default=1, type=int, help='Save model each n-th epoch during training')
-    parser.add_argument('--test_multisamp_n', default=10, type=int, help='Average logits obtained over runs with different seeds')
+    parser.add_argument('--test_multisamp_n', default=9, type=int, help='Average logits obtained over runs with different seeds')
 
     # Dataset
     parser.add_argument('--dataset', default='custom_dataset', help='Dataset name: sema3d|s3dis')
@@ -210,7 +210,7 @@ def main():
             logging.debug('Batch loss %f, Loader time %f ms, Trainer time %f ms.', loss.item(), t_loader, t_trainer)
             t0 = time.time()
 
-
+        # train accuracy, loss,
         return acc_meter.value()[0], loss_meter.value()[0], confusion_matrix.get_overall_accuracy(), confusion_matrix.get_average_intersection_union()
 
     ############
@@ -237,7 +237,9 @@ def main():
                 acc_meter.add(o_cpu, t_cpu)
                 confusion_matrix.count_predicted_batch(tvec_cpu, np.argmax(o_cpu,1))
 
+        # precision_test, oacc_test, avg_iou_test, avg_acc_test
         return meter_value(acc_meter), confusion_matrix.get_overall_accuracy(), confusion_matrix.get_average_intersection_union(), confusion_matrix.get_mean_class_accuracy()
+
 
     ############
     def eval_final():

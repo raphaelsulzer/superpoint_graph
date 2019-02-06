@@ -16,10 +16,10 @@ parser = argparse.ArgumentParser(description='Large-scale Point Cloud Semantic S
 parser.add_argument('--dataset', default='custom_dataset', help='dataset name: sema3d|s3dis')
 parser.add_argument('--ROOT_PATH', default='/home/raphael/PhD/data/varcity3d/data/ruemonge428', help='folder containing the ./data folder')
 parser.add_argument('--res_file', default='../learning/results/predictions_test', help='folder containing the results')
-parser.add_argument('--file_path', default='cut', help='file to output (must include the area / set in its path)')
+parser.add_argument('--file_path', default='test', help='file to output (must include the area / set in its path)')
 parser.add_argument('--upsample', default=0, type=int, help='if 1, upsample the prediction to the original cloud (if the files is huge it can take a very long and use a lot of memory - avoid on sema3d)')
 parser.add_argument('--ver_batch', default=0, type=int, help='Batch size for reading large files')
-parser.add_argument('--output_type', default='igfprs', help='which cloud to output: i = input rgb pointcloud \
+parser.add_argument('--output_type', default='igfpres', help='which cloud to output: i = input rgb pointcloud \
                     , g = ground truth, f = geometric features, p = partition, r = prediction result \
                     , e = error, s = SPG')
 #'igfpres'
@@ -42,9 +42,9 @@ folder = os.path.split(args.file_path)[1] + '/'
 #file_name = 'train/pcl_gt_train_withColor'
 
 
-for i in range(1,2):
-
+for i in range(10,14):
     file_name = 'pcl_gt_' + str(i)
+    #file_name = fname
     print(file_name)
 
     if args.dataset == 's3dis':
