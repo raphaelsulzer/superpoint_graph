@@ -3,6 +3,8 @@ from __future__ import print_function
 from builtins import range
 
 import numpy as np
+from matplotlib import pyplot as plt
+import itertools
 
 # extended official code from http://www.semantic3d.net/scripts/metric.py
 class ConfusionMatrix:
@@ -76,6 +78,53 @@ class ConfusionMatrix:
     for i in range(self.number_of_labels):
         re = re + self.confusion_matrix[i][i] / max(1,np.sum(self.confusion_matrix[i,:]))
     return re/self.number_of_labels
+
+  # plot confusion matrix after: http://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
+  def plot_confusion_matrix(self,
+                            normalize=False,
+                            title='Confusion matrix',
+                            cmap=plt.cm.Blues):
+    """
+    This function prints and plots the confusion matrix.
+    Normalization can be applied by setting `normalize=True`.
+    """
+    # TODO: add overall accuracies as last row & column
+
+    cm = self.confusion_matrix
+
+    classes = ['facade', 'door', 'sky', 'balcony', 'window', 'shop', 'roof']
+
+
+    if normalize:
+      cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+      name = 'CM_normed_'
+    else:
+      name = 'CM_'
+
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(classes))
+    class_index = np.arange(len(classes) + 1)[1:]
+    plt.xticks(tick_marks, classes)
+    plt.yticks(tick_marks, classes)
+    # plt.tick_params(axis='both', which='minor', labelsize=1)
+
+    fmt = '.2f'  # if normalize else 'd'
+    thresh = cm.max() / 2.
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+      plt.text(j, i, format(cm[i, j], fmt),
+               horizontalalignment="center",
+               color="white" if cm[i, j] > thresh else "black")
+
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    plt.tight_layout()
+    plt.show(block=False)
+
+
+
+
 
   # def build_conf_matrix_from_file(self, ground_truth_file, classified_file):
   #   #read line by line without storing everything in ram

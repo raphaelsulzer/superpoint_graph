@@ -53,7 +53,7 @@ def main():
     parser.add_argument('--nworkers', default=0, type=int, help='Num subprocesses to use for data loading. 0 means that the data will be loaded in the main process')
     parser.add_argument('--test_nth_epoch', default=1, type=int, help='Test each n-th epoch during training')
     parser.add_argument('--save_nth_epoch', default=1, type=int, help='Save model each n-th epoch during training')
-    parser.add_argument('--test_multisamp_n', default=9, type=int, help='Average logits obtained over runs with different seeds')
+    parser.add_argument('--test_multisamp_n', default=4, type=int, help='Average logits obtained over runs with different seeds')
 
     # Dataset
     parser.add_argument('--dataset', default='custom_dataset', help='Dataset name: sema3d|s3dis')
@@ -286,9 +286,15 @@ def main():
         for c, name in dbinfo['inv_class_map'].items():
             per_class_iou[name] = perclsiou[c]
 
+        confusion_matrix.plot_confusion_matrix(normalize=True)
+
         return meter_value(acc_meter), confusion_matrix.get_overall_accuracy(), confusion_matrix.get_average_intersection_union(), per_class_iou, predictions,  confusion_matrix.get_mean_class_accuracy(), confusion_matrix.confusion_matrix
 
-    ############
+    ################################################################################################
+    ### here execution of main starts
+    ################################################################################################
+
+
     # Training loop
     for epoch in range(args.start_epoch, args.epochs):
         print('Epoch {}/{} ({}):'.format(epoch, args.epochs, args.odir))
@@ -299,7 +305,7 @@ def main():
 
         if (epoch+1) % args.test_nth_epoch == 0 or epoch+1==args.epochs:
             acc_test, oacc_test, avg_iou_test, avg_acc_test = eval()
-            print('-> Train accuracy: {}, \tLoss: {}, \tTest accuracy: {}, \tTest oAcc: {}, \tTest avgIoU: {}'.format(acc, loss, acc_test, oacc_test, avg_iou_test))
+            print('-> Train accuracy: {}, \tLoss: {}, \tTest precision: {}, \tTest oAcc: {}, \tTest avgIoU: {}'.format(acc, loss, acc_test, oacc_test, avg_iou_test))
         else:
             acc_test, oacc_test, avg_iou_test, avg_acc_test = 0, 0, 0, 0
             print('-> Train accuracy: {}, \tLoss: {}'.format(acc, loss))
@@ -321,12 +327,12 @@ def main():
     # Final evaluation
     if args.test_multisamp_n>0:
         acc_test, oacc_test, avg_iou_test, per_class_iou_test, predictions_test, avg_acc_test, confusion_matrix = eval_final()
-        print('-> Multisample {}: Test accuracy: {}, \tTest oAcc: {}, \tTest avgIoU: {}, \tTest mAcc: {}'.format(args.test_multisamp_n, acc_test, oacc_test, avg_iou_test, avg_acc_test))
+        print('-> Multisample {}: Test precision: {}, \tTest oAcc: {}, \tTest avgIoU: {}, \tTest mAcc: {}'.format(args.test_multisamp_n, acc_test, oacc_test, avg_iou_test, avg_acc_test))
         with h5py.File(os.path.join(args.odir, 'predictions_'+args.db_test_name+'.h5'), 'w') as hf:
             for fname, o_cpu in predictions_test.items():
                 hf.create_dataset(name=fname, data=o_cpu) #(0-based classes)
         with open(os.path.join(args.odir, 'scores_'+args.db_test_name+'.txt'), 'w') as outfile:
-            json.dump([{'epoch': args.start_epoch, 'acc_test': acc_test, 'oacc_test': oacc_test, 'avg_iou_test': avg_iou_test, 'per_class_iou_test': per_class_iou_test, 'avg_acc_test': avg_acc_test}], outfile)
+            json.dump([{'epoch': args.start_epoch, 'precision_test': acc_test, 'oacc_test': oacc_test, 'avg_iou_test': avg_iou_test, 'per_class_iou_test': per_class_iou_test, 'avg_acc_test': avg_acc_test}], outfile)
         np.save(os.path.join(args.odir, 'pointwise_cm.npy'), confusion_matrix)
 
 

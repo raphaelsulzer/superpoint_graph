@@ -41,6 +41,9 @@ def get_datasets(args, test_seed_offset=0):
     ### in seperate folders
     trainlist, testlist = [], []
 
+    # TODO: do the split of files inside the data/train,test folders in a better way
+    # this should probably only require to change the visualisation function in the end, to loop over the specific files instead of range(10,14)
+
     path = '{}/superpoint_graphs/train/'.format(args.CUSTOM_SET_PATH)
     for fname in sorted(os.listdir(path)):
         if fname.endswith(".h5"):
@@ -109,8 +112,14 @@ def preprocess_pointclouds(CUSTOM_SET_PATH):
                 elpsv = np.stack([ f['xyz'][:,2][:], f['linearity'][:], f['planarity'][:], f['scattering'][:], f['verticality'][:] ], axis=1)
                 #lpsv = np.stack([ f['linearity'][:], f['planarity'][:], f['scattering'][:], f['verticality'][:] ], axis=1)
 
+                # TODO: check normalisation again
+
                 ma, mi = np.max(xyz,axis=0,keepdims=True), np.min(xyz,axis=0,keepdims=True)
                 xyzn = (xyz - mi) / (ma - mi + 1e-8)   # as in PointNet ("normalized location as to the room (from 0 to 1)")
+                # but one room = one file (or one facade in my case), so why would you still need the global (unnormalized) XYZ
+                # update: we are looping over superpoints per facade, so the global XYZ of the facade is still important
+                # I should however normalize that per facade maybe
+                # another quesion is, would you want to properly normalize the superpoint xyz coordinates
                 #xyzn = preprocessing.normalize(xyz)
 
 
